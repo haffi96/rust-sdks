@@ -138,7 +138,6 @@ pub mod native {
             // Register the queue so the encoder factory creates a
             // PassthroughH264Encoder when negotiating H.264 for this track.
             pt_sys::ffi::register_passthrough_encoder_queue(frame_queue.clone());
-            println!("[livekit] EncodedH264VideoSource::new registered queue");
 
             let dummy_buffer = I420Buffer::new(resolution.width, resolution.height);
 
@@ -199,7 +198,6 @@ pub mod native {
             if Arc::strong_count(&self.state) == 1 {
                 // Clear the global passthrough queue so stale queues don't
                 // hijack unrelated H.264 encoders created later.
-                println!("[livekit] EncodedH264VideoSource::drop unregistering queue");
                 pt_sys::ffi::unregister_passthrough_encoder_queue();
             }
         }

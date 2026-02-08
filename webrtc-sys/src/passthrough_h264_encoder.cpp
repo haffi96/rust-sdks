@@ -67,7 +67,6 @@ void register_passthrough_encoder_queue(
     std::shared_ptr<EncodedFrameQueue> queue) {
   std::lock_guard<std::mutex> lock(g_passthrough_mutex);
   g_pending_passthrough_queue = std::move(queue);
-  std::cout << "[livekit] register_passthrough_encoder_queue\n";
 }
 
 std::shared_ptr<EncodedFrameQueue> take_pending_passthrough_queue() {
@@ -78,7 +77,6 @@ std::shared_ptr<EncodedFrameQueue> take_pending_passthrough_queue() {
 void unregister_passthrough_encoder_queue() {
   std::lock_guard<std::mutex> lock(g_passthrough_mutex);
   g_pending_passthrough_queue.reset();
-  std::cout << "[livekit] unregister_passthrough_encoder_queue\n";
 }
 
 // Maximum frames to drain from the queue per Encode() call.  If more than
@@ -91,9 +89,7 @@ static constexpr int kMaxDrain = 3;
 
 PassthroughH264Encoder::PassthroughH264Encoder(
     std::shared_ptr<EncodedFrameQueue> queue)
-    : queue_(std::move(queue)) {
-  std::cout << "[livekit] PassthroughH264Encoder constructed\n";
-}
+    : queue_(std::move(queue)) {}
 
 PassthroughH264Encoder::~PassthroughH264Encoder() {
   Release();
@@ -106,8 +102,6 @@ int32_t PassthroughH264Encoder::InitEncode(
     width_ = codec_settings->width;
     height_ = codec_settings->height;
   }
-  std::cout << "[livekit] PassthroughH264Encoder InitEncode width=" << width_
-            << " height=" << height_ << "\n";
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -154,9 +148,6 @@ int32_t PassthroughH264Encoder::Encode(
       RTC_LOG(LS_INFO) << "PassthroughH264: encode_calls=" << encode_calls_
                        << " delivered=" << frames_delivered_
                        << " empty=" << empty_calls_;
-      std::cout << "[livekit] PassthroughH264: encode_calls=" << encode_calls_
-                << " delivered=" << frames_delivered_
-                << " empty=" << empty_calls_ << "\n";
     }
     return WEBRTC_VIDEO_CODEC_OK;
   }
@@ -164,8 +155,6 @@ int32_t PassthroughH264Encoder::Encode(
   if (drained > 1) {
     RTC_LOG(LS_WARNING) << "PassthroughH264: drained " << drained
                         << " queued frames, using latest";
-    std::cout << "[livekit] PassthroughH264: drained " << drained
-              << " queued frames, using latest\n";
   }
 
   webrtc::EncodedImage encoded_image;
@@ -207,10 +196,6 @@ int32_t PassthroughH264Encoder::Encode(
                      << " empty=" << empty_calls_
                      << " last_size=" << latest.data.size()
                      << " keyframe=" << latest.is_keyframe;
-    std::cout << "[livekit] PassthroughH264: delivered=" << frames_delivered_
-              << " encode_calls=" << encode_calls_ << " empty=" << empty_calls_
-              << " last_size=" << latest.data.size()
-              << " keyframe=" << latest.is_keyframe << "\n";
   }
 
   return WEBRTC_VIDEO_CODEC_OK;

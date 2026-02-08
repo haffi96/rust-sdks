@@ -153,8 +153,6 @@ VideoEncoderFactory::CodecSupport VideoEncoderFactory::QueryCodecSupport(
 std::unique_ptr<webrtc::VideoEncoder> VideoEncoderFactory::Create(
     const webrtc::Environment& env,
     const webrtc::SdpVideoFormat& format) {
-  std::cout << "[livekit] VideoEncoderFactory::Create format=" << format.name
-            << "\n";
   // Passthrough H.264: bypass SimulcastEncoderAdapter entirely so that
   // our EncoderInfo (has_trusted_rate_controller=true) is used directly
   // by VideoStreamEncoder, preventing unwanted frame dropping.
@@ -163,8 +161,6 @@ std::unique_ptr<webrtc::VideoEncoder> VideoEncoderFactory::Create(
     if (queue) {
       RTC_LOG(LS_INFO)
           << "Using PassthroughH264Encoder (direct, no simulcast wrapper)";
-      std::cout << "[livekit] Using PassthroughH264Encoder (direct, no "
-                   "simulcast wrapper)\n";
       return std::make_unique<PassthroughH264Encoder>(std::move(queue));
     } else {
       std::cout << "[livekit] No passthrough queue registered for H264\n";
