@@ -469,6 +469,18 @@ unsafe fn on_capture_video_frame(
     Ok(proto::CaptureVideoFrameResponse::default())
 }
 
+/// Push an encoded H.264 access unit to an encoded video source.
+/// The data is enqueued for the PassthroughH264Encoder which delivers it
+/// directly to WebRTC's RTP packetizer without decoding/re-encoding.
+fn on_capture_encoded_frame(
+    server: &'static FfiServer,
+    push: proto::CaptureEncodedFrameRequest,
+) -> FfiResult<proto::CaptureEncodedFrameResponse> {
+    let source = server.retrieve_handle::<video_source::FfiVideoSource>(push.source_handle)?;
+    source.capture_encoded_frame(server, push)?;
+    Ok(proto::CaptureEncodedFrameResponse::default())
+}
+
 /// Convert a video frame
 ///
 /// # Safety: The user must ensure that the pointers/len provided are valid
@@ -1227,6 +1239,7 @@ pub fn handle_request(
         }
         Request::NewVideoSource(req) => on_new_video_source(server, req)?.into(),
         Request::CaptureVideoFrame(req) => unsafe { on_capture_video_frame(server, req)?.into() },
+        Request::CaptureEncodedFrame(req) => on_capture_encoded_frame(server, req)?.into(),
         Request::VideoConvert(req) => unsafe { on_video_convert(server, req)?.into() },
         Request::NewAudioStream(req) => on_new_audio_stream(server, req)?.into(),
         Request::NewAudioSource(req) => on_new_audio_source(server, req)?.into(),

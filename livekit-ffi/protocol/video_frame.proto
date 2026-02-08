@@ -62,6 +62,16 @@ message CaptureVideoFrameRequest {
 
 message CaptureVideoFrameResponse {}
 
+// Push an encoded H.264 frame to an encoded video source (VIDEO_SOURCE_ENCODED_H264).
+// Frame must be a complete access unit (e.g. SPS/PPS/SEI/slice NALs in order).
+message CaptureEncodedFrameRequest {
+  required uint64 source_handle = 1;
+  required bytes encoded_data = 2;   // H.264 NAL units (Annex B or AVCC as used by encoder)
+  required int64 timestamp_us = 3;   // In microseconds
+  required bool is_keyframe = 4;     // True if frame contains IDR slice
+}
+message CaptureEncodedFrameResponse {}
+
 message VideoConvertRequest {
   optional bool flip_y = 1;
   required VideoBufferInfo buffer = 2;
@@ -180,6 +190,7 @@ message VideoSourceResolution {
 
 enum VideoSourceType {
   VIDEO_SOURCE_NATIVE = 0;
+  VIDEO_SOURCE_ENCODED_H264 = 1;
 }
 
 message VideoSourceInfo {

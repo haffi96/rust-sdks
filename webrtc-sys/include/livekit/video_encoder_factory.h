@@ -18,6 +18,7 @@
 
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_encoder_factory.h"
+#include "livekit/passthrough_h264_encoder.h"
 
 namespace livekit_ffi {
 class VideoEncoderFactory : public webrtc::VideoEncoderFactory {

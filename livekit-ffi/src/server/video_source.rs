@@ -39,6 +39,13 @@ impl FfiVideoSource {
                 let video_source = NativeVideoSource::new(new_source.resolution.into());
                 RtcVideoSource::Native(video_source)
             }
+            #[cfg(not(target_arch = "wasm32"))]
+            proto::VideoSourceType::VideoSourceEncodedH264 => {
+                use livekit::webrtc::video_source::native::EncodedH264VideoSource;
+
+                let video_source = EncodedH264VideoSource::new(new_source.resolution.into());
+                RtcVideoSource::EncodedH264(video_source)
+            }
             _ => return Err(FfiError::InvalidRequest("unsupported video source type".into())),
         };
 
@@ -73,5 +80,29 @@ impl FfiVideoSource {
             _ => {}
         }
         Ok(())
+    }
+
+    /// Push an encoded H.264 access unit.  For ENCODED_H264 sources the
+    /// data is enqueued for the passthrough encoder which delivers it
+    /// directly to WebRTC's RTP packetizer without decoding/re-encoding.
+    pub fn capture_encoded_frame(
+        &self,
+        _server: &'static server::FfiServer,
+        capture: proto::CaptureEncodedFrameRequest,
+    ) -> FfiResult<()> {
+        match self.source {
+            #[cfg(not(target_arch = "wasm32"))]
+            RtcVideoSource::EncodedH264(ref source) => {
+                source.push_encoded_frame(
+                    &capture.encoded_data,
+                    capture.timestamp_us,
+                    capture.is_keyframe,
+                );
+                Ok(())
+            }
+            _ => Err(FfiError::InvalidRequest(
+                "capture_encoded_frame requires an ENCODED_H264 video source".into(),
+            )),
+        }
     }
 }

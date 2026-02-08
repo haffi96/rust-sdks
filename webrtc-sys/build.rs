@@ -54,6 +54,7 @@ fn main() {
         "src/prohibit_libsrtp_initialization.rs",
         "src/apm.rs",
         "src/audio_mixer.rs",
+        "src/passthrough_h264_encoder.rs",
     ];
 
     if is_desktop {
@@ -82,6 +83,7 @@ fn main() {
         "src/video_frame_buffer.cpp",
         "src/video_encoder_factory.cpp",
         "src/video_decoder_factory.cpp",
+        "src/passthrough_h264_encoder.cpp",
         "src/audio_device.cpp",
         "src/audio_resampler.cpp",
         "src/frame_cryptor.cpp",

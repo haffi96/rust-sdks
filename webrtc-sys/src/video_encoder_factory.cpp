@@ -16,6 +16,8 @@
 
 #include "livekit/video_encoder_factory.h"
 
+#include <iostream>
+
 #include "api/environment/environment_factory.h"
 #include "api/video_codecs/sdp_video_format.h"
 #include "api/video_codecs/video_encoder.h"
@@ -74,7 +76,8 @@ VideoEncoderFactory::InternalFactory::InternalFactory() {
 
 #if defined(USE_VAAPI_VIDEO_CODEC)
     if (webrtc::VAAPIVideoEncoderFactory::IsSupported()) {
-      factories_.push_back(std::make_unique<webrtc::VAAPIVideoEncoderFactory>());
+      factories_.push_back(
+          std::make_unique<webrtc::VAAPIVideoEncoderFactory>());
     }
 #endif
 
@@ -110,6 +113,10 @@ std::unique_ptr<webrtc::VideoEncoder>
 VideoEncoderFactory::InternalFactory::Create(
     const webrtc::Environment& env,
     const webrtc::SdpVideoFormat& format) {
+  // Note: passthrough H.264 is handled in the outer
+  // VideoEncoderFactory::Create() to bypass SimulcastEncoderAdapter.
+  // InternalFactory only creates real encoders.
+
   for (const auto& factory : factories_) {
     for (const auto& supported_format : factory->GetSupportedFormats()) {
       if (supported_format.IsSameCodec(format))
@@ -146,6 +153,24 @@ VideoEncoderFactory::CodecSupport VideoEncoderFactory::QueryCodecSupport(
 std::unique_ptr<webrtc::VideoEncoder> VideoEncoderFactory::Create(
     const webrtc::Environment& env,
     const webrtc::SdpVideoFormat& format) {
+  std::cout << "[livekit] VideoEncoderFactory::Create format=" << format.name
+            << "\n";
+  // Passthrough H.264: bypass SimulcastEncoderAdapter entirely so that
+  // our EncoderInfo (has_trusted_rate_controller=true) is used directly
+  // by VideoStreamEncoder, preventing unwanted frame dropping.
+  if (format.name == "H264") {
+    auto queue = take_pending_passthrough_queue();
+    if (queue) {
+      RTC_LOG(LS_INFO)
+          << "Using PassthroughH264Encoder (direct, no simulcast wrapper)";
+      std::cout << "[livekit] Using PassthroughH264Encoder (direct, no "
+                   "simulcast wrapper)\n";
+      return std::make_unique<PassthroughH264Encoder>(std::move(queue));
+    } else {
+      std::cout << "[livekit] No passthrough queue registered for H264\n";
+    }
+  }
+
   std::unique_ptr<webrtc::VideoEncoder> encoder;
   if (format.IsCodecInList(internal_factory_->GetSupportedFormats())) {
     encoder = std::make_unique<webrtc::SimulcastEncoderAdapter>(

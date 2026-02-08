@@ -37,6 +37,7 @@ pub mod rtp_sender;
 pub mod rtp_transceiver;
 pub mod video_frame;
 pub mod video_frame_buffer;
+pub mod passthrough_h264_encoder;
 pub mod video_track;
 pub mod webrtc;
 pub mod yuv_helper;
